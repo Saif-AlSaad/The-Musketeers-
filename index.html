@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Musketeers — Modern Commerce</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ============================================================
+     NOTIFICATION TOAST
+============================================================ -->
+<div id="toast-container"></div>
+
+<!-- ============================================================
+     HEADER / NAV
+============================================================ -->
+<header id="site-header">
+  <div class="header-inner">
+    <a href="#" class="logo" onclick="showPage('home')">
+      <span class="logo-mark">M</span>
+      <span class="logo-text">The Musketeers</span>
+    </a>
+
+    <nav class="main-nav" id="main-nav">
+      <a href="#" onclick="showPage('home')" class="nav-link active" data-page="home">Home</a>
+      <a href="#" onclick="showPage('shop')" class="nav-link" data-page="shop">Shop</a>
+      <a href="#" onclick="showPage('deals')" class="nav-link" data-page="deals">Deals</a>
+      <a href="#" onclick="showPage('about')" class="nav-link" data-page="about">About</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn search-btn" onclick="toggleSearch()" title="Search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+      <button class="icon-btn wishlist-btn" onclick="showPage('wishlist')" title="Wishlist">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span class="badge" id="wishlist-count">0</span>
+      </button>
+      <button class="icon-btn cart-btn" onclick="showPage('cart')" title="Cart">
+        <svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="badge" id="cart-count">0</span>
+      </button>
+      <button class="icon-btn user-btn" onclick="toggleUserMenu()" title="Account">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+      <button class="icon-btn menu-toggle" id="menu-toggle" onclick="toggleMobileMenu()">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- User Dropdown -->
+    <div class="user-dropdown" id="user-dropdown">
+      <div id="dropdown-guest">
+        <p class="dropdown-greeting">Welcome!</p>
+        <button class="btn-primary btn-sm" onclick="showPage('login')">Sign In</button>
+        <button class="btn-outline btn-sm" onclick="showPage('register')">Register</button>
+      </div>
+      <div id="dropdown-user" style="display:none">
+        <p class="dropdown-greeting">Hi, <span id="user-name-display">User</span>!</p>
+        <a href="#" onclick="showPage('profile')">👤 My Profile</a>
+        <a href="#" onclick="showPage('orders')">📦 My Orders</a>
+        <a href="#" onclick="showPage('wishlist')">❤ Wishlist</a>
+        <a href="#" id="admin-link" onclick="showPage('admin')">⚙ Admin Panel</a>
+        <hr/>
+        <a href="#" onclick="logout()">🚪 Sign Out</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar" id="search-bar">
+    <div class="search-inner">
+      <input type="text" id="search-input" placeholder="Search products, brands, categories…" oninput="handleSearch(this.value)" />
+      <button onclick="toggleSearch()">✕</button>
+    </div>
+    <div class="search-results" id="search-results"></div>
+  </div>
+</header>
+
+<!-- ============================================================
+     PAGES
+============================================================ -->
+<main id="main-content">
+
+  <!-- ========== HOME PAGE ========== -->
+  <section id="page-home" class="page active">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-bg">
+        <div class="hero-blob blob-1"></div>
+        <div class="hero-blob blob-2"></div>
+        <div class="hero-blob blob-3"></div>
+      </div>
+      <div class="hero-content">
+        <span class="hero-badge">New Season Arrivals</span>
+        <h1 class="hero-title">Shop Without<br/><em>Limits.</em></h1>
+        <p class="hero-sub">Discover thousands of products curated for your lifestyle. Premium quality, unbeatable prices.</p>
+        <div class="hero-btns">
+          <button class="btn-primary btn-lg" onclick="showPage('shop')">Explore Shop</button>
+          <button class="btn-ghost btn-lg" onclick="showPage('deals')">Today's Deals</button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><strong>50K+</strong><span>Products</span></div>
+          <div class="stat"><strong>2M+</strong><span>Happy Customers</span></div>
+          <div class="stat"><strong>24/7</strong><span>Support</span></div>
+        </div>
+      </div>
+      <div class="hero-image-wrap">
+        <div class="hero-card-float card-1">
+          <span>⚡ Flash Sale</span>
+          <strong>Up to 70% Off</strong>
+        </div>
+        <div class="hero-card-float card-2">
+          <span>🚚 Free Shipping</span>
+          <strong>On orders 6000 TK+</strong>
+        </div>
+        <div class="hero-mockup">
+          <div class="mockup-product" onclick="openProduct(0)">
+            <div class="mockup-img">🎧</div>
+            <div class="mockup-info">
+              <span>Premium Headphones</span>
+              <strong>8999 TK</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Strip -->
+    <div class="section-wrap">
+      <div class="section-header">
+        <h2>Browse Categories</h2>
+        <a href="#" onclick="showPage('shop')">View all →</a>
+      </div>
+      <div class="category-grid" id="category-grid"></div>
+    </div>
+
+    <!-- Featured Products -->
+    <div class="section-wrap bg-alt">
+      <div class="section-header">
+        <h2>Featured Products</h2>
+        <a href="#" onclick="showPage('shop')">Shop all →</a>
+      </div>
+      <div class="product-grid" id="featured-products"></div>
+    </div>
+
+    <!-- Promo Banner -->
+    <div class="promo-banner">
+      <div class="promo-content">
+        <span class="promo-tag">Limited Time</span>
+        <h2>Summer Sale is ON!</h2>
+        <p>Use code <strong>SUMMER30</strong> for 30% off your entire order</p>
+        <button class="btn-primary" onclick="showPage('shop')">Shop Now</button>
+      </div>
+      <div class="promo-decoration">
+        <span class="deco-circle c1"></span>
+        <span class="deco-circle c2"></span>
+        <span class="deco-text">30%<br/>OFF</span>
+      </div>
+    </div>
+
+    <!-- New Arrivals -->
+    <div class="section-wrap">
+      <div class="section-header">
+        <h2>New Arrivals</h2>
+        <a href="#" onclick="showPage('shop')">See more →</a>
+      </div>
+      <div class="product-grid" id="new-arrivals"></div>
+    </div>
+
+    <!-- Testimonials -->
+    <div class="section-wrap bg-alt">
+      <div class="section-header"><h2>What Customers Say</h2></div>
+      <div class="testimonials-grid" id="testimonials"></div>
+    </div>
+
+    <!-- Newsletter -->
+    <div class="newsletter-section">
+      <h2>Stay in the Loop</h2>
+      <p>Get exclusive deals, new arrivals, and more — delivered to your inbox.</p>
+      <div class="newsletter-form">
+        <input type="email" id="newsletter-email" placeholder="Enter your email address" />
+        <button class="btn-primary" onclick="subscribeNewsletter()">Subscribe</button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ========== SHOP PAGE ========== -->
+  <section id="page-shop" class="page">
+    <div class="page-hero-sm">
+      <h1>Shop All Products</h1>
+      <p>Browse our entire collection</p>
+    </div>
+    <div class="shop-layout">
+      <!-- Filters Sidebar -->
+      <aside class="filters-sidebar" id="filters-sidebar">
+        <div class="filter-header">
+          <h3>Filters</h3>
+          <button onclick="clearFilters()">Clear all</button>
+        </div>
+
+        <div class="filter-group">
+          <h4>Category</h4>
+          <div id="filter-categories"></div>
+        </div>
+
+        <div class="filter-group">
+          <h4>Price Range</h4>
+          <div class="price-range">
+            <input type="range" id="price-min" min="0" max="110000" value="0" oninput="filterProducts()" />
+            <input type="range" id="price-max" min="0" max="110000" value="110000" oninput="filterProducts()" />
+            <div class="price-labels">
+              <span>TK <span id="price-min-val">0</span></span>
+              <span>TK <span id="price-max-val">110000</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h4>Rating</h4>
+          <div class="rating-filters">
+            <label><input type="radio" name="rating" value="0" checked onchange="filterProducts()" /> All Ratings</label>
+            <label><input type="radio" name="rating" value="4" onchange="filterProducts()" /> ⭐⭐⭐⭐ & Up</label>
+            <label><input type="radio" name="rating" value="3" onchange="filterProducts()" /> ⭐⭐⭐ & Up</label>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h4>Availability</h4>
+          <label class="checkbox-label">
+            <input type="checkbox" id="in-stock-only" onchange="filterProducts()" /> In Stock Only
+          </label>
+        </div>
+      </aside>
+
+      <!-- Products Area -->
+      <div class="shop-main">
+        <div class="shop-toolbar">
+          <p id="product-count-text">Showing all products</p>
+          <div class="toolbar-right">
+            <select id="sort-select" onchange="filterProducts()">
+              <option value="default">Sort: Featured</option>
+              <option value="price-asc">Price: Low → High</option>
+              <option value="price-desc">Price: High → Low</option>
+              <option value="rating">Highest Rated</option>
+              <option value="newest">Newest</option>
+            </select>
+            <button class="view-toggle active" id="grid-view-btn" onclick="setView('grid')">⊞</button>
+            <button class="view-toggle" id="list-view-btn" onclick="setView('list')">☰</button>
+          </div>
+        </div>
+        <div class="product-grid" id="shop-products"></div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PRODUCT DETAIL PAGE ========== -->
+  <section id="page-product" class="page">
+    <div class="breadcrumb" id="product-breadcrumb"></div>
+    <div class="product-detail" id="product-detail"></div>
+    <div class="section-wrap">
+      <div class="section-header"><h2>You May Also Like</h2></div>
+      <div class="product-grid" id="related-products"></div>
+    </div>
+    <div class="reviews-section" id="reviews-section"></div>
+  </section>
+
+  <!-- ========== CART PAGE ========== -->
+  <section id="page-cart" class="page">
+    <div class="page-hero-sm">
+      <h1>Shopping Cart</h1>
+    </div>
+    <div class="cart-layout">
+      <div class="cart-items" id="cart-items"></div>
+      <div class="cart-summary" id="cart-summary"></div>
+    </div>
+  </section>
+
+  <!-- ========== WISHLIST PAGE ========== -->
+  <section id="page-wishlist" class="page">
+    <div class="page-hero-sm">
+      <h1>My Wishlist</h1>
+    </div>
+    <div class="product-grid" id="wishlist-products"></div>
+  </section>
+
+  <!-- ========== CHECKOUT PAGE ========== -->
+  <section id="page-checkout" class="page">
+    <div class="page-hero-sm"><h1>Checkout</h1></div>
+    <div class="checkout-layout">
+      <div class="checkout-form-area">
+        <!-- Step Indicator -->
+        <div class="checkout-steps">
+          <div class="step active" id="step-1-indicator">
+            <span class="step-num">1</span>
+            <span>Shipping</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step" id="step-2-indicator">
+            <span class="step-num">2</span>
+            <span>Payment</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step" id="step-3-indicator">
+            <span class="step-num">3</span>
+            <span>Review</span>
+          </div>
+        </div>
+
+        <!-- Step 1: Shipping -->
+        <div id="checkout-step-1" class="checkout-step">
+          <h3>Shipping Information</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>First Name</label><input type="text" id="ship-fname" placeholder="John" /></div>
+            <div class="form-group"><label>Last Name</label><input type="text" id="ship-lname" placeholder="Doe" /></div>
+            <div class="form-group full"><label>Email</label><input type="email" id="ship-email" placeholder="john@example.com" /></div>
+            <div class="form-group full"><label>Address</label><input type="text" id="ship-address" placeholder="123 Main Street" /></div>
+            <div class="form-group"><label>City</label><input type="text" id="ship-city" placeholder="New York" /></div>
+            <div class="form-group"><label>ZIP Code</label><input type="text" id="ship-zip" placeholder="10001" /></div>
+            <div class="form-group full"><label>Country</label>
+              <select id="ship-country">
+                <option>United States</option>
+                <option>United Kingdom</option>
+                <option>Canada</option>
+                <option>Australia</option>
+                <option>Bangladesh</option>
+              </select>
+            </div>
+          </div>
+          <h4>Shipping Method</h4>
+          <div class="shipping-methods">
+            <label class="shipping-option">
+              <input type="radio" name="shipping" value="standard" checked />
+              <div><strong>Standard Shipping</strong><span>5-7 business days</span></div>
+              <span class="price">Free</span>
+            </label>
+            <label class="shipping-option">
+              <input type="radio" name="shipping" value="express" />
+              <div><strong>Express Shipping</strong><span>2-3 business days</span></div>
+              <span class="price">1100 TK</span>
+            </label>
+            <label class="shipping-option">
+              <input type="radio" name="shipping" value="overnight" />
+              <div><strong>Overnight</strong><span>Next business day</span></div>
+              <span class="price">2200 TK</span>
+            </label>
+          </div>
+          <button class="btn-primary btn-full" onclick="nextCheckoutStep(2)">Continue to Payment →</button>
+        </div>
+
+        <!-- Step 2: Payment -->
+        <div id="checkout-step-2" class="checkout-step" style="display:none">
+          <h3>Payment Information</h3>
+          <div class="payment-methods-tabs">
+            <button class="pay-tab active" onclick="setPayTab('card',this)">💳 Credit Card</button>
+            <button class="pay-tab" onclick="setPayTab('paypal',this)">🅿 PayPal</button>
+            <button class="pay-tab" onclick="setPayTab('mobile',this)">📱 Mobile Banking</button>
+            <button class="pay-tab" onclick="setPayTab('cod',this)">💵 Cash on Delivery</button>
+          </div>
+          <div id="pay-card">
+            <div class="form-grid">
+              <div class="form-group full"><label>Card Number</label><input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)" /></div>
+              <div class="form-group full"><label>Cardholder Name</label><input type="text" id="card-name" placeholder="John Doe" /></div>
+              <div class="form-group"><label>Expiry</label><input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5" /></div>
+              <div class="form-group"><label>CVV</label><input type="text" id="card-cvv" placeholder="123" maxlength="3" /></div>
+            </div>
+            <div class="card-preview" id="card-preview">
+              <div class="card-chip">▣</div>
+              <div class="card-number-display" id="card-num-display">•••• •••• •••• ••••</div>
+              <div class="card-bottom">
+                <span id="card-name-display">CARDHOLDER NAME</span>
+                <span id="card-exp-display">MM/YY</span>
+              </div>
+            </div>
+          </div>
+          <div id="pay-paypal" style="display:none">
+            <div class="paypal-info">
+              <div class="paypal-logo">PayPal</div>
+              <p>You will be redirected to PayPal to complete your payment securely.</p>
+              <input type="email" placeholder="PayPal email address" />
+            </div>
+          </div>
+          <div id="pay-mobile" style="display:none">
+            <div class="form-group full"><label>Select Mobile Banking</label>
+              <select id="mobile-method">
+                <option value="bkash">bKash</option>
+                <option value="nagad">Nagad</option>
+                <option value="rocket">Rocket</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Mobile Number</label><input type="text" id="mobile-number" placeholder="01XXXXXXXXX" /></div>
+            <div class="form-group"><label>Transaction ID</label><input type="text" id="mobile-txn" placeholder="Enter TXN ID" /></div>
+            <p style="color: var(--gray-600); margin-top: 0.75rem;">Use the selected mobile banking method and enter your transaction ID to confirm payment.</p>
+          </div>
+          <div id="pay-cod" style="display:none">
+            <p>Cash on Delivery is available. Pay with cash when your order arrives.</p>
+            <p style="color: var(--gray-600); margin-top: 0.75rem;">Please keep the exact amount ready and confirm your shipping address carefully.</p>
+          </div>
+          <div class="form-group coupon-group">
+            <label>Promo Code</label>
+            <div class="coupon-input">
+              <input type="text" id="coupon-input" placeholder="Enter promo code" />
+              <button onclick="applyCoupon()">Apply</button>
+            </div>
+            <span id="coupon-msg"></span>
+          </div>
+          <div class="checkout-nav">
+            <button class="btn-outline" onclick="nextCheckoutStep(1)">← Back</button>
+            <button class="btn-primary" onclick="nextCheckoutStep(3)">Review Order →</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Review -->
+        <div id="checkout-step-3" class="checkout-step" style="display:none">
+          <h3>Order Review</h3>
+          <div id="order-review-items"></div>
+          <div class="checkout-nav">
+            <button class="btn-outline" onclick="nextCheckoutStep(2)">← Back</button>
+            <button class="btn-primary btn-lg" onclick="placeOrder()">🎉 Place Order</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="checkout-summary" id="checkout-summary"></div>
+    </div>
+  </section>
+
+  <!-- ========== ORDERS PAGE ========== -->
+  <section id="page-orders" class="page">
+    <div class="page-hero-sm"><h1>My Orders</h1></div>
+    <div class="orders-list" id="orders-list"></div>
+  </section>
+
+  <!-- ========== ORDER CONFIRMATION ========== -->
+  <section id="page-order-confirm" class="page">
+    <div class="confirm-wrap">
+      <div class="confirm-icon">✓</div>
+      <h1>Order Placed!</h1>
+      <p>Thank you for shopping with The Musketeers. Your order <strong id="confirm-order-id">#00001</strong> has been confirmed.</p>
+      <p>We'll send a confirmation email with tracking details.</p>
+      <div class="confirm-actions">
+        <button class="btn-primary" onclick="showPage('orders')">Track Order</button>
+        <button class="btn-outline" onclick="showPage('home')">Continue Shopping</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== LOGIN PAGE ========== -->
+  <section id="page-login" class="page">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-logo"><span>M</span></div>
+        <h2>Welcome Back</h2>
+        <p>Sign in to your account</p>
+        <div class="form-group"><label>Email or Username</label><input type="text" id="login-email" placeholder="you@example.com or username" /></div>
+        <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" /></div>
+        <div class="auth-extras">
+          <label><input type="checkbox" /> Remember me</label>
+          <a href="#">Forgot password?</a>
+        </div>
+        <button class="btn-primary btn-full" onclick="login()">Sign In</button>
+        <div class="auth-divider"><span>or</span></div>
+        <button class="btn-social">🌐 Continue with Google</button>
+        <p class="auth-switch">Don't have an account? <a href="#" onclick="showPage('register')">Sign up</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== REGISTER PAGE ========== -->
+  <section id="page-register" class="page">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-logo"><span>M</span></div>
+        <h2>Create Account</h2>
+        <p>Join The Musketeers today</p>
+        <div class="form-grid">
+          <div class="form-group"><label>First Name</label><input type="text" id="reg-fname" placeholder="John" /></div>
+          <div class="form-group"><label>Last Name</label><input type="text" id="reg-lname" placeholder="Doe" /></div>
+        </div>
+        <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@example.com" /></div>
+        <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Min 8 characters" /></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" id="reg-confirm" placeholder="Repeat password" /></div>
+        <label class="checkbox-label"><input type="checkbox" id="reg-terms" /> I agree to the <a href="#">Terms & Conditions</a></label>
+        <button class="btn-primary btn-full" onclick="register()">Create Account</button>
+        <p class="auth-switch">Already have an account? <a href="#" onclick="showPage('login')">Sign in</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PROFILE PAGE ========== -->
+  <section id="page-profile" class="page">
+    <div class="page-hero-sm"><h1>My Profile</h1></div>
+    <div class="profile-layout">
+      <aside class="profile-sidebar">
+        <div class="avatar-wrap">
+          <div class="avatar" id="profile-avatar">U</div>
+          <h3 id="profile-name">User Name</h3>
+          <p id="profile-email-display">user@example.com</p>
+        </div>
+        <nav class="profile-nav">
+          <a href="#" class="active" onclick="showProfileTab('info')">👤 Personal Info</a>
+          <a href="#" onclick="showProfileTab('address')">📍 Addresses</a>
+          <a href="#" onclick="showProfileTab('security')">🔒 Security</a>
+          <a href="#" onclick="showPage('orders')">📦 Orders</a>
+          <a href="#" onclick="showPage('wishlist')">❤ Wishlist</a>
+        </nav>
+      </aside>
+      <div class="profile-content">
+        <div id="profile-tab-info">
+          <h3>Personal Information</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>First Name</label><input type="text" id="prof-fname" /></div>
+            <div class="form-group"><label>Last Name</label><input type="text" id="prof-lname" /></div>
+            <div class="form-group full"><label>Email</label><input type="email" id="prof-email" /></div>
+            <div class="form-group full"><label>Phone</label><input type="tel" id="prof-phone" placeholder="+1 (555) 000-0000" /></div>
+          </div>
+          <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+        </div>
+        <div id="profile-tab-address" style="display:none">
+          <h3>Saved Addresses</h3>
+          <div class="address-list" id="address-list"></div>
+          <button class="btn-outline" onclick="addAddress()">+ Add New Address</button>
+        </div>
+        <div id="profile-tab-security" style="display:none">
+          <h3>Security Settings</h3>
+          <div class="form-group"><label>Current Password</label><input type="password" placeholder="••••••••" /></div>
+          <div class="form-group"><label>New Password</label><input type="password" placeholder="••••••••" /></div>
+          <div class="form-group"><label>Confirm Password</label><input type="password" placeholder="••••••••" /></div>
+          <button class="btn-primary" onclick="showToast('Password updated!','success')">Update Password</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== DEALS PAGE ========== -->
+  <section id="page-deals" class="page">
+    <div class="page-hero-sm deals-hero">
+      <div class="deals-countdown">
+        <h1>Flash Sale Ends In</h1>
+        <div class="countdown" id="countdown">
+          <div class="cd-unit"><span id="cd-h">00</span><label>Hours</label></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-unit"><span id="cd-m">00</span><label>Mins</label></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-unit"><span id="cd-s">00</span><label>Secs</label></div>
+        </div>
+      </div>
+    </div>
+    <div class="section-wrap">
+      <div class="product-grid" id="deals-products"></div>
+    </div>
+  </section>
+
+  <!-- ========== ADMIN PANEL ========== -->
+  <section id="page-admin" class="page">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="admin-brand">
+          <span>⚙</span>
+          <strong>Admin Panel</strong>
+        </div>
+        <nav class="admin-nav">
+          <a href="#" class="admin-link active" onclick="showAdminTab('dashboard')">📊 Dashboard</a>
+          <a href="#" class="admin-link" onclick="showAdminTab('products')">📦 Products</a>
+          <a href="#" class="admin-link" onclick="showAdminTab('orders')">🛒 Orders</a>
+          <a href="#" class="admin-link" onclick="showAdminTab('customers')">👥 Customers</a>
+          <a href="#" class="admin-link" onclick="showAdminTab('inventory')">🏭 Inventory</a>
+          <a href="#" class="admin-link" onclick="showAdminTab('promotions')">🎁 Promotions</a>
+          <a href="#" class="admin-link" onclick="showAdminTab('analytics')">📈 Analytics</a>
+        </nav>
+        <button class="btn-outline btn-sm" style="margin:1rem" onclick="showPage('home')">← Back to Store</button>
+      </aside>
+
+      <div class="admin-main">
+        <!-- Dashboard Tab -->
+        <div id="admin-tab-dashboard" class="admin-tab">
+          <h2>Dashboard Overview</h2>
+          <div class="stat-cards" id="admin-stat-cards"></div>
+          <div class="admin-grid-2">
+            <div class="admin-card">
+              <h3>Recent Orders</h3>
+              <div id="admin-recent-orders"></div>
+            </div>
+            <div class="admin-card">
+              <h3>Top Products</h3>
+              <div id="admin-top-products"></div>
+            </div>
+          </div>
+          <div class="admin-card">
+            <h3>Revenue Chart (Last 7 Days)</h3>
+            <div class="chart-wrap">
+              <canvas id="revenue-chart" width="600" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="admin-tab-products" class="admin-tab" style="display:none">
+          <div class="admin-tab-header">
+            <h2>Manage Products</h2>
+            <button class="btn-primary" onclick="openAddProduct()">+ Add Product</button>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table" id="admin-products-table">
+              <thead><tr><th>ID</th><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+              <tbody id="admin-products-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="admin-tab-orders" class="admin-tab" style="display:none">
+          <h2>All Orders</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+              <tbody id="admin-orders-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Customers Tab -->
+        <div id="admin-tab-customers" class="admin-tab" style="display:none">
+          <h2>Customers</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Orders</th><th>Spent</th><th>Joined</th></tr></thead>
+              <tbody id="admin-customers-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="admin-tab-inventory" class="admin-tab" style="display:none">
+          <h2>Inventory Management</h2>
+          <div class="inventory-alerts" id="inventory-alerts"></div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Product</th><th>SKU</th><th>In Stock</th><th>Reserved</th><th>Available</th><th>Status</th><th>Restock</th></tr></thead>
+              <tbody id="admin-inventory-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Promotions Tab -->
+        <div id="admin-tab-promotions" class="admin-tab" style="display:none">
+          <div class="admin-tab-header">
+            <h2>Discounts & Promotions</h2>
+            <button class="btn-primary" onclick="openAddCoupon()">+ New Coupon</button>
+          </div>
+          <div class="coupons-grid" id="coupons-grid"></div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="admin-tab-analytics" class="admin-tab" style="display:none">
+          <h2>Reports & Analytics</h2>
+          <div class="analytics-period">
+            <button class="period-btn active" onclick="setPeriod('7d',this)">7 Days</button>
+            <button class="period-btn" onclick="setPeriod('30d',this)">30 Days</button>
+            <button class="period-btn" onclick="setPeriod('90d',this)">90 Days</button>
+          </div>
+          <div class="stat-cards" id="analytics-cards"></div>
+          <div class="admin-grid-2">
+            <div class="admin-card">
+              <h3>Sales by Category</h3>
+              <div id="category-chart-wrap"></div>
+            </div>
+            <div class="admin-card">
+              <h3>Traffic Sources</h3>
+              <div id="traffic-chart-wrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div class="modal-overlay" id="product-modal" onclick="closeModal('product-modal')">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3 id="product-modal-title">Add Product</h3>
+          <button onclick="closeModal('product-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group full"><label>Product Name</label><input type="text" id="pm-name" /></div>
+            <div class="form-group"><label>Price (TK)</label><input type="number" id="pm-price" /></div>
+            <div class="form-group"><label>Original Price (TK)</label><input type="number" id="pm-orig-price" /></div>
+            <div class="form-group"><label>Category</label>
+              <select id="pm-category">
+                <option>Electronics</option><option>Fashion</option><option>Home & Garden</option>
+                <option>Sports</option><option>Beauty</option><option>Books</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Stock Qty</label><input type="number" id="pm-stock" /></div>
+            <div class="form-group full"><label>Description</label><textarea id="pm-desc" rows="3"></textarea></div>
+            <div class="form-group"><label>Emoji Icon</label><input type="text" id="pm-emoji" placeholder="🛍" /></div>
+            <div class="form-group"><label>Rating (0-5)</label><input type="number" id="pm-rating" min="0" max="5" step="0.1" /></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-outline" onclick="closeModal('product-modal')">Cancel</button>
+          <button class="btn-primary" onclick="saveProduct()">Save Product</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Coupon Modal -->
+    <div class="modal-overlay" id="coupon-modal" onclick="closeModal('coupon-modal')">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Create Coupon</h3>
+          <button onclick="closeModal('coupon-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group"><label>Coupon Code</label><input type="text" id="coupon-code-input" placeholder="SUMMER30" /></div>
+          <div class="form-group"><label>Discount Type</label>
+            <select id="coupon-type"><option value="percent">Percentage</option><option value="fixed">Fixed Amount</option></select>
+          </div>
+          <div class="form-group"><label>Discount Value</label><input type="number" id="coupon-value" placeholder="30" /></div>
+          <div class="form-group"><label>Minimum Order (TK)</label><input type="number" id="coupon-min" placeholder="0" /></div>
+          <div class="form-group"><label>Expiry Date</label><input type="date" id="coupon-expiry" /></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-outline" onclick="closeModal('coupon-modal')">Cancel</button>
+          <button class="btn-primary" onclick="saveCoupon()">Create Coupon</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== ABOUT PAGE ========== -->
+  <section id="page-about" class="page">
+    <div class="about-hero">
+      <h1>About The Musketeers</h1>
+      <p>All for one, one for all — and great deals for everyone.</p>
+    </div>
+    <div class="about-content section-wrap">
+      <div class="about-grid">
+        <div class="about-text">
+          <h2>Our Story</h2>
+          <p>Founded in 2020, The Musketeers was born from a simple belief: everyone deserves access to quality products at fair prices. We've grown from a small startup to serving over 2 million happy customers worldwide.</p>
+          <p>Our platform brings together thousands of vendors, ensuring you always find exactly what you're looking for — from the latest electronics to handcrafted home goods.</p>
+        </div>
+        <div class="about-values">
+          <div class="value-card"><span>🎯</span><h4>Quality First</h4><p>Every product is vetted for quality and authenticity.</p></div>
+          <div class="value-card"><span>🌱</span><h4>Sustainable</h4><p>Committed to eco-friendly packaging and practices.</p></div>
+          <div class="value-card"><span>🤝</span><h4>Fair Trade</h4><p>Supporting fair wages for all our partner vendors.</p></div>
+          <div class="value-card"><span>🔒</span><h4>Secure</h4><p>Your data and payments are always protected.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="#" class="logo" onclick="showPage('home')">
+        <span class="logo-mark">M</span>
+        <span class="logo-text">The Musketeers</span>
+      </a>
+      <p>Modern commerce for modern people. Shop smart, live well.</p>
+      <div class="social-links">
+        <a href="https://www.instagram.com/the_musketee_rs/" target="_blank" rel="noopener noreferrer">📷</a>
+        <a href="https://www.facebook.com/profile.php?id=61585649247213" target="_blank" rel="noopener noreferrer">f</a>
+        <a href="#">in</a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a href="#" onclick="showPage('shop')">All Products</a>
+        <a href="#" onclick="showPage('deals')">Deals</a>
+        <a href="#" onclick="showPage('shop')">New Arrivals</a>
+        <a href="#">Gift Cards</a>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <a href="#" onclick="showPage('profile')">My Profile</a>
+        <a href="#" onclick="showPage('orders')">My Orders</a>
+        <a href="#" onclick="showPage('wishlist')">Wishlist</a>
+        <a href="#" onclick="showPage('cart')">Cart</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="#">Help Center</a>
+        <a href="#">Track Order</a>
+        <a href="#">Returns</a>
+        <a href="#">Contact Us</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#" onclick="showPage('about')">About Us</a>
+        <a href="#">Careers</a>
+        <a href="#">Press</a>
+        <a href="#">Blog</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 The Musketeers. All rights reserved.</p>
+    <div class="footer-legal">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Cookie Policy</a>
+    </div>
+    <div class="payment-badges">
+      <span>VISA</span><span>MC</span><span>PayPal</span><span>Stripe</span>
+    </div>
+  </div>
+</footer>
+
+<script src="index.js"></script>
+</body>
+</html>

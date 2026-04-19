@@ -4,45 +4,72 @@
 ============================================================ */
 
 /* ── App State ─────────────────────────────────────────── */
-const savedProducts = JSON.parse(localStorage.getItem('tm_products') || 'null');
-const defaultProductList = defaultProducts();
-const removedProductIds = [7, 8, 10, 13, 16];
-const products = Array.isArray(savedProducts)
-  ? [
-      ...savedProducts
-        .filter(saved => !removedProductIds.includes(saved.id))
-        .map(saved => {
-          const def = defaultProductList.find(d => d.id === saved.id);
-          return def ? { ...def, ...saved, images: (saved.images && saved.images.length) ? saved.images : def.images } : saved;
-        }),
-      ...defaultProductList.filter(def => !savedProducts.some(s => s.id === def.id) && !removedProductIds.includes(def.id))
-    ]
-  : defaultProductList.filter(p => !removedProductIds.includes(p.id));
+const API_URL = 'http://localhost:3000/api';
 
 const State = {
-  cart: JSON.parse(localStorage.getItem('tm_cart') || '[]'),
-  wishlist: JSON.parse(localStorage.getItem('tm_wishlist') || '[]'),
+  cart: [],
+  wishlist: [],
   user: JSON.parse(localStorage.getItem('tm_user') || 'null'),
-  orders: JSON.parse(localStorage.getItem('tm_orders') || '[]'),
-  coupons: JSON.parse(localStorage.getItem('tm_coupons') || 'null') || defaultCoupons(),
-  products,
-  customers: defaultCustomers(),
+  orders: [],
+  coupons: [],
+  products: [],
+  customers: [],
   appliedCoupon: null,
   editingProductId: null,
   currentPage: 1,
   itemsPerPage: 12,
-  currentFilters: { category: 'All', priceMin: 0, priceMax: 1000, rating: 0, inStock: false, sort: 'default' },
+  currentFilters: { category: 'All', priceMin: 0, priceMax: 110000, rating: 0, inStock: false, sort: 'default' },
   currentProductId: null,
   reviewRating: 5,
 };
 
+async function initApp() {
+  try {
+    const [products, coupons] = await Promise.all([
+      fetch(`${API_URL}/products`).then(res => res.json()),
+      // Coupons are still mostly static but could be fetched if we add an endpoint
+      Promise.resolve(defaultCoupons()) 
+    ]);
+    
+    State.products = products;
+    State.coupons = coupons;
+    
+    if (State.user) {
+      const [cart, wishlist, orders] = await Promise.all([
+        fetch(`${API_URL}/cart/${State.user.id}`).then(res => res.json()),
+        fetch(`${API_URL}/wishlist/${State.user.id}`).then(res => res.json()),
+        fetch(`${API_URL}/orders/${State.user.id}`).then(res => res.json())
+      ]);
+      State.cart = cart;
+      State.wishlist = wishlist;
+      State.orders = orders;
+    }
+
+    updateBadges();
+    showPage('home');
+  } catch (err) {
+    console.error('Initialization error:', err);
+    showToast('Failed to connect to server.', 'error', '✕');
+  }
+}
+
+// Re-fetch user data if logged in
+async function refreshUserData() {
+  if (!State.user) return;
+  const [cart, wishlist, orders] = await Promise.all([
+    fetch(`${API_URL}/cart/${State.user.id}`).then(res => res.json()),
+    fetch(`${API_URL}/wishlist/${State.user.id}`).then(res => res.json()),
+    fetch(`${API_URL}/orders/${State.user.id}`).then(res => res.json())
+  ]);
+  State.cart = cart;
+  State.wishlist = wishlist;
+  State.orders = orders;
+  updateBadges();
+}
+
 function persist() {
-  localStorage.setItem('tm_cart', JSON.stringify(State.cart));
-  localStorage.setItem('tm_wishlist', JSON.stringify(State.wishlist));
+  // Most persistence is now server-side, but we keep user in localStorage for session
   localStorage.setItem('tm_user', JSON.stringify(State.user));
-  localStorage.setItem('tm_orders', JSON.stringify(State.orders));
-  localStorage.setItem('tm_coupons', JSON.stringify(State.coupons));
-  localStorage.setItem('tm_products', JSON.stringify(State.products));
 }
 
 /* ── Default Data ──────────────────────────────────────── */
@@ -525,14 +552,29 @@ function submitReview() {
 }
 
 /* ── Cart ──────────────────────────────────────────────── */
-function addToCart(id, qty = null) {
+async function addToCart(id, qty = null) {
   if (qty === null) qty = pdQty || 1;
   const product = State.products.find(p => p.id === id);
   if (!product || product.stock <= 0) { showToast('This product is out of stock.','error','✕'); return; }
+  
   const existing = State.cart.find(i => i.id === id);
-  if (existing) existing.qty += qty;
+  const newQty = existing ? existing.qty + qty : qty;
+
+  if (State.user) {
+    try {
+      await fetch(`${API_URL}/cart/${State.user.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: id, qty: newQty })
+      });
+    } catch (err) {
+      console.error('Cart update error:', err);
+    }
+  }
+
+  if (existing) existing.qty = newQty;
   else State.cart.push({ id, qty });
-  persist();
+  
   updateBadges();
   showToast(`${product.name} added to cart!`, 'success', product.emoji);
   pdQty = 1;
@@ -580,16 +622,38 @@ function renderCart() {
   renderCartSummary();
 }
 
-function updateCartQty(id, d) {
+async function updateCartQty(id, d) {
   const item = State.cart.find(i => i.id === id);
   if (!item) return;
-  item.qty = Math.max(1, item.qty + d);
-  persist(); renderCart(); updateBadges();
+  const newQty = Math.max(1, item.qty + d);
+  
+  if (State.user) {
+    try {
+      await fetch(`${API_URL}/cart/${State.user.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: id, qty: newQty })
+      });
+    } catch (err) {
+      console.error('Cart update error:', err);
+    }
+  }
+
+  item.qty = newQty;
+  renderCart(); updateBadges();
 }
 
-function removeFromCart(id) {
+async function removeFromCart(id) {
+  if (State.user) {
+    try {
+      await fetch(`${API_URL}/cart/${State.user.id}/${id}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('Cart delete error:', err);
+    }
+  }
+
   State.cart = State.cart.filter(i => i.id !== id);
-  persist(); renderCart(); updateBadges();
+  renderCart(); updateBadges();
   showToast('Item removed from cart.', 'info', '🗑');
 }
 
@@ -632,16 +696,34 @@ function applyCartCoupon() {
 }
 
 /* ── Wishlist ──────────────────────────────────────────── */
-function toggleWishlist(id) {
+async function toggleWishlist(id) {
   const product = State.products.find(p => p.id === id);
-  if (State.wishlist.includes(id)) {
+  const inWishlist = State.wishlist.includes(id);
+
+  if (State.user) {
+    try {
+      if (inWishlist) {
+        await fetch(`${API_URL}/wishlist/${State.user.id}/${id}`, { method: 'DELETE' });
+      } else {
+        await fetch(`${API_URL}/wishlist/${State.user.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: id })
+        });
+      }
+    } catch (err) {
+      console.error('Wishlist error:', err);
+    }
+  }
+
+  if (inWishlist) {
     State.wishlist = State.wishlist.filter(i => i !== id);
     showToast(`Removed from wishlist.`, 'info', '♡');
   } else {
     State.wishlist.push(id);
     showToast(`${product?.name} added to wishlist!`, 'success', '❤');
   }
-  persist(); updateBadges();
+  updateBadges();
   if ($('page-wishlist').classList.contains('active')) renderWishlist();
 }
 
@@ -771,37 +853,45 @@ function applyCoupon() {
   renderCheckoutSummary();
 }
 
-function placeOrder() {
+async function placeOrder() {
   if (!State.user) { showToast('Please sign in to place an order.','error','🔐'); showPage('login'); return; }
   const sub = cartSubtotal();
   const discount = State.appliedCoupon?.discount || 0;
   const ship = getShippingCost();
   const total = sub + ship + (sub * 0.1) - discount;
   const orderId = '#' + randId();
-  const order = {
+  
+  const orderData = {
     id: orderId,
-    items: State.cart.map(item => {
-      const p = State.products.find(p => p.id === item.id);
-      return { name: p?.name, emoji: p?.emoji, qty: item.qty, price: p?.price };
-    }),
+    user_id: State.user.id,
     total: Math.max(0, total),
     status: 'processing',
     date: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
     trackingStep: 1,
+    items: State.cart.map(item => {
+      const p = State.products.find(p => p.id === item.id);
+      return { name: p?.name, emoji: p?.emoji, qty: item.qty, price: p?.price };
+    })
   };
-  State.orders.unshift(order);
-  // Reduce stock
-  State.cart.forEach(item => {
-    const p = State.products.find(p => p.id === item.id);
-    if (p) p.stock = Math.max(0, p.stock - item.qty);
-  });
-  State.cart = [];
-  State.appliedCoupon = null;
-  persist();
-  updateBadges();
-  $('confirm-order-id').textContent = orderId;
-  showPage('order-confirm');
-  showToast('Order placed successfully! 🎉','success','📦');
+
+  try {
+    const res = await fetch(`${API_URL}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+    if (!res.ok) throw new Error('Failed to place order');
+
+    State.orders.unshift(orderData);
+    State.cart = [];
+    State.appliedCoupon = null;
+    updateBadges();
+    $('confirm-order-id').textContent = orderId;
+    showPage('order-confirm');
+    showToast('Order placed successfully! 🎉','success','📦');
+  } catch (err) {
+    showToast(err.message, 'error', '✕');
+  }
 }
 
 /* ── Orders ────────────────────────────────────────────── */
@@ -845,51 +935,71 @@ function toggleTracking(btn) {
 }
 
 /* ── Auth ──────────────────────────────────────────────── */
-function login() {
+async function login() {
   const email = $('login-email').value.trim();
   const pass = $('login-password').value;
   if (!email || !pass) { showToast('Please fill in all fields.','error','✕'); return; }
 
-  // Check for admin credentials
-  if (email === 'Nemesis' && pass === 'Nemesis123') {
-    State.user = { fname: 'Nemesis', email: 'admin@musketeers.com', lname: '', isAdmin: true };
-    persist();
-    renderDropdown();
-    showToast('Welcome, Admin Nemesis! ⚙', 'success', '✓');
-    showPage('home');
-    return;
-  }
+  try {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
 
-  if (!email.includes('@')) { showToast('Invalid email address.','error','✕'); return; }
-  State.user = { fname: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1), email, lname: '' };
-  persist();
-  renderDropdown();
-  showToast(`Welcome back, ${State.user.fname}! 👋`, 'success', '✓');
-  showPage('home');
+    State.user = data;
+    persist();
+    await refreshUserData();
+    renderDropdown();
+    showToast(`Welcome back, ${State.user.fname}! 👋`, 'success', '✓');
+    showPage('home');
+  } catch (err) {
+    showToast(err.message, 'error', '✕');
+  }
 }
 
-function register() {
+async function register() {
   const fname = $('reg-fname').value.trim();
   const lname = $('reg-lname').value.trim();
   const email = $('reg-email').value.trim();
   const pass = $('reg-password').value;
   const confirm = $('reg-confirm').value;
   const terms = $('reg-terms').checked;
+
   if (!fname || !email || !pass) { showToast('Please fill in all required fields.','error','✕'); return; }
   if (pass !== confirm) { showToast('Passwords do not match.','error','✕'); return; }
   if (pass.length < 8) { showToast('Password must be at least 8 characters.','error','✕'); return; }
   if (!terms) { showToast('Please accept the terms and conditions.','error','✕'); return; }
-  State.user = { fname, lname, email };
-  persist();
-  renderDropdown();
-  showToast(`Account created! Welcome, ${fname}! 🎉`, 'success', '✓');
-  showPage('home');
+
+  try {
+    const res = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fname, lname, email, password: pass })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    State.user = data;
+    persist();
+    renderDropdown();
+    showToast(`Account created! Welcome, ${fname}! 🎉`, 'success', '✓');
+    showPage('home');
+  } catch (err) {
+    showToast(err.message, 'error', '✕');
+  }
 }
 
 function logout() {
   State.user = null;
+  State.cart = [];
+  State.wishlist = [];
+  State.orders = [];
   persist();
   renderDropdown();
+  updateBadges();
   $('user-dropdown').classList.remove('open');
   showToast('You have been signed out.', 'info', '👋');
   showPage('home');
@@ -915,13 +1025,30 @@ function showProfileTab(tab) {
   document.querySelectorAll('.profile-nav a').forEach((a,i) => a.classList.toggle('active', i === ['info','address','security'].indexOf(tab)));
 }
 
-function saveProfile() {
-  State.user.fname = $('prof-fname').value;
-  State.user.lname = $('prof-lname').value;
-  State.user.email = $('prof-email').value;
-  persist();
-  renderProfile();
-  showToast('Profile updated successfully!', 'success', '✓');
+async function saveProfile() {
+  const updatedUser = {
+    fname: $('prof-fname').value,
+    lname: $('prof-lname').value,
+    email: $('prof-email').value
+  };
+
+  if (State.user) {
+    try {
+      const res = await fetch(`${API_URL}/users/${State.user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedUser)
+      });
+      if (!res.ok) throw new Error('Failed to update profile');
+      
+      State.user = { ...State.user, ...updatedUser };
+      persist();
+      renderProfile();
+      showToast('Profile updated successfully!', 'success', '✓');
+    } catch (err) {
+      showToast(err.message, 'error', '✕');
+    }
+  }
 }
 
 function renderAddresses() {
@@ -1335,13 +1462,5 @@ document.addEventListener('click', e => {
 });
 
 /* ── Init ──────────────────────────────────────────────── */
-(function init() {
-  updateBadges();
-  renderDropdown();
-  showPage('home');
-  // Animate stat badge when 0
-  document.querySelectorAll('.badge').forEach(b => {
-    if (b.textContent === '0') b.style.display = 'none';
-  });
-  console.log('🗡 The Musketeers — Commerce Platform Initialized');
-})();
+initApp();
+console.log('🗡 The Musketeers — SQL Full-Stack Platform Initialized');
